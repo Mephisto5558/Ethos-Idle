@@ -1,0 +1,29 @@
+{
+  "name": "ethos_idle_clone",
+  "version": "0.0.1",
+  "description": "Clone of an idle game I found on Google PlayStore",
+  "main": "ts/index.ts",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "idle",
+    "game",
+    "clone"
+  ],
+  "author": "Mephisto5558",
+  "license": "MIT",
+  "devDependencies": {
+    "@mephisto5558/eslint-config": "file:../libs/eslint-config",
+    "better-typescript-lib": "latest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mephisto5558/EthosIdle_Clone.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Mephisto5558/EthosIdle_Clone/issues"
+  },
+  "homepage": "https://github.com/Mephisto5558/EthosIdle_Clone#readme"
+}
