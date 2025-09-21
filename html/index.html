@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+  <title>Ethos Idle</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <meta name='description' content='A clone of an idle game I found on Google PlayStore'>
+  <style>
+    body {
+      background-color: #242424;
+    }
+  </style>
+  <link rel='stylesheet' crossorigin='anonymous'
+    href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css' />
+
+  <link rel='stylesheet' href='/css/index.css' crossorigin='anonymous' />
+</head>
+
+<body>
+  <header>
+    <p><span id='game-speed-num'>1</span>x</p>
+    <button class='with-hoverstyle'>Menu</button>
+  </header>
+  <main>
+    <div id='upgrades-container'>
+      <div class='upgrade with-hoverstyle hidden'>
+        <span class='up-level'>1</span>
+        <div class='up-data'>
+          <div class='up-info'>
+            <p class='up-name'>Upgrade 1</p>
+            <div class='up-improvements-container'>
+              <div class='up-imp'>
+                <p>+<span class='value'>1</span><span class='unit'></span></p>
+                <i class='up-imp-icon fa-solid fa-star'></i>
+              </div>
+              <div class='up-imp'>
+                <p>+<span class='value'>1.2</span><span class='unit'></span></p>
+                <i class='up-imp-icon fa-solid fa-sun'></i>
+              </div>
+            </div>
+          </div>
+          <div class='up-progressbar'></div>
+        </div>
+      </div>
+    </div>
+    <ul id='upgrades-group-buttons'>
+      <li class='active'><button class='up-group-btn with-hoverstyle'></button></li>
+    </ul>
+  </main>
+  <footer>
+    <div id='items'>
+      <div class='items-group' id='group-big'>
+        <div class='g-info with-hoverstyle' id='people'>
+          <i class='fa-solid fa-users'></i>
+          <p><span class='value'>127</span><span class='unit'>k</span></p>
+        </div>
+        <div class='g-info with-hoverstyle' id='ideas-kind1'>
+          <i class='fa-solid fa-lightbulb'></i>
+          <p>x<span class='value'>189</span><span class='unit'></span></p>
+        </div>
+        <div class='g-info with-hoverstyle ' id='ideas-kind2'>
+          <i class='fa-solid fa-lightbulb'></i>
+          <p>x<span class='value'>216</span><span class='unit'></span></p>
+        </div>
+        <div class='g-info with-hoverstyle' id='ideas-kind3'>
+          <i class='fa-solid fa-lightbulb'></i>
+          <p>x<span class='value'>146</span><span class='unit'></span></p>
+        </div>
+      </div>
+      <div class='items-group' id='group-small'>
+        <div class='g-info with-hoverstyle' id='growth'>
+          <p><span class='value'>3718</span><span class='unit'></span></p>
+          <i class="fa-solid fa-signal"></i>
+        </div>
+        <div class='g-info with-hoverstyle' id='health'>
+          <p><span class='value'>1886</span><span class='unit'></span></p>
+          <i class="fa-solid fa-plus"></i>
+        </div>
+        <div class='g-info with-hoverstyle' id='military'>
+          <p><span class='value'>1147</span><span class='unit'></span></p>
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class='g-info with-hoverstyle' id='influence'>
+          <p><span class='value'>2160</span><span class='unit'></span></p>
+          <i class='fa-solid fa-star'></i>
+        </div>
+        <div class='g-info with-hoverstyle' id='work'>
+          <p><span class='value'>3700</span><span class='unit'></span></p>
+          <i class="fa-solid fa-gavel fa-rotate-270"></i>
+        </div>
+        <div class='g-info with-hoverstyle' id='exploration'>
+          <p><span class='value'>1535</span><span class='unit'></span></p>
+          <i class='fa-solid fa-sun'></i>
+        </div>
+      </div>
+    </div>
+    <nav id='tabs'>
+      <button class='tab with-hoverstyle active' id='tab-upgrades'>
+        <i class='fa-solid fa-lightbulb'></i>
+      </button>
+      <button class='tab with-hoverstyle' id='tab-work'>
+        <i class='fa-solid fa-gavel'></i>
+      </button>
+      <button class='tab with-hoverstyle' id='tab-exploration'>
+        <i class='fa-solid fa-sun'></i>
+      </button>
+    </nav>
+  </footer>
+
+  <script src='/js/index.js' type='module'></script>
+</body>
+
+</html>
