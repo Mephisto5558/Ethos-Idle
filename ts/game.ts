@@ -257,7 +257,13 @@ export default class Game implements GameData {
   deleteSave(): this {
     globalThis.localStorage.removeItem('gameSave');
 
-    return this.load();
+    const defaultGame = new (this.constructor as typeof Game)();
+    this.saveVersion = defaultGame.saveVersion;
+    this.gameSpeed = defaultGame.gameSpeed;
+    this.openPageId = defaultGame.openPageId;
+    this.upgradePages = defaultGame.upgradePages;
+
+    return this;
   }
 
   registerAutoSave(): this {

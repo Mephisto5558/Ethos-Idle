@@ -228,7 +228,12 @@ export default class Game {
     }
     deleteSave() {
         globalThis.localStorage.removeItem('gameSave');
-        return this.load();
+        const defaultGame = new this.constructor();
+        this.saveVersion = defaultGame.saveVersion;
+        this.gameSpeed = defaultGame.gameSpeed;
+        this.openPageId = defaultGame.openPageId;
+        this.upgradePages = defaultGame.upgradePages;
+        return this;
     }
     registerAutoSave() {
         if (this.#autoSaveEnabled)
