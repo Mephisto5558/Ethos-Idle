@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-magic-numbers, @typescript-eslint/no-non-null-assertion */
 
-import Game from './game.ts';
+import Game, { CurrencyIconClass } from './game.ts';
 import { centerActiveButton, romanize } from './utils.ts';
 
 declare global {
@@ -72,6 +72,27 @@ upgradesGroupList.addEventListener('click', event => {
     element.querySelector('.up-level')!.textContent = data.level.toLocaleString();
     element.querySelector('.up-name')!.textContent = name;
     element.setAttribute('type', data.type.toString());
+
+    const
+      improvementsContainer = element.querySelector('.up-improvements-container')!,
+      originalImprovementElement = improvementsContainer.querySelector('.up-imp')!;
+
+    improvementsContainer.replaceChildren(...data.rewards.map(reward => {
+      const improvementElement = originalImprovementElement.cloneNode(true) as HTMLDivElement;
+
+      improvementElement.querySelector('p > .sign')!.textContent = reward.amount > 0 ? '+' : '-';
+      improvementElement.querySelector('p > .value')!.textContent = reward.amount.toLocaleString();
+      improvementElement.querySelector('p > .unit')!.textContent = reward.type == 'percentage' ? '%' : '';
+
+      const iconElement = improvementElement.querySelector('.up-imp-icon')!;
+      for (const iconClass of Object.values(CurrencyIconClass) as string[])
+        iconElement.classList.remove(...iconClass.split(' '));
+
+      iconElement.classList.add(...CurrencyIconClass[reward.kind].split(' '));
+
+      return improvementElement;
+    }));
+
     element.classList.remove('hidden');
   }
 

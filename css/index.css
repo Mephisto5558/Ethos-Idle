@@ -72,7 +72,7 @@ span {
 div:has(>i.fa-solid) {
 
   & > .fa-users,
-  & > .fa-users ~ p {
+  &.g-info:has(>.fa-users) > p {
     color: var(--color-people);
   }
 
@@ -106,28 +106,19 @@ div:has(>i.fa-solid) {
     color: var(--color-exploration)
   }
 
-  &#ideas-kind1 {
-
-    & > .fa-lightbulb,
-    & > p {
-      color: var(--color-idea1);
-    }
+  & > .fa-lightbulb.kind1,
+  &.g-info:has(>.fa-lightbulb.kind1) > p {
+    color: var(--color-idea1)
   }
 
-  &#ideas-kind2 {
-
-    & > .fa-lightbulb,
-    & > p {
-      color: var(--color-idea2);
-    }
+  & > .fa-lightbulb.kind2,
+  &.g-info:has(>.fa-lightbulb.kind2) > p {
+    color: var(--color-idea2)
   }
 
-  &#ideas-kind3 {
-
-    & > .fa-lightbulb,
-    & > p {
-      color: var(--color-idea3);
-    }
+  & > .fa-lightbulb.kind3,
+  &.g-info:has(>.fa-lightbulb.kind3) > p {
+    color: var(--color-idea3)
   }
 }
 

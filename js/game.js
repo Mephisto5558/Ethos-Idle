@@ -4,7 +4,7 @@ var IdeaType;
     IdeaType[IdeaType["Blue"] = 2] = "Blue";
     IdeaType[IdeaType["Green"] = 3] = "Green";
 })(IdeaType || (IdeaType = {}));
-var CurrencyKind;
+export var CurrencyKind;
 (function (CurrencyKind) {
     CurrencyKind["People"] = "people";
     CurrencyKind["Ideas1"] = "ideas1";
@@ -17,6 +17,18 @@ var CurrencyKind;
     CurrencyKind["Work"] = "work";
     CurrencyKind["Exploration"] = "exploration";
 })(CurrencyKind || (CurrencyKind = {}));
+export const CurrencyIconClass = {
+    [CurrencyKind.People]: 'fa-users',
+    [CurrencyKind.Ideas1]: 'fa-lightbulb kind1',
+    [CurrencyKind.Ideas2]: 'fa-lightbulb kind2',
+    [CurrencyKind.Ideas3]: 'fa-lightbulb kind3',
+    [CurrencyKind.Growth]: 'fa-signal',
+    [CurrencyKind.Health]: 'fa-plus',
+    [CurrencyKind.Military]: 'fa-shield-halved',
+    [CurrencyKind.Influence]: 'fa-star',
+    [CurrencyKind.Work]: 'fa-gavel fa-rotate-270',
+    [CurrencyKind.Exploration]: 'fa-sun'
+};
 export default class Game {
     saveVersion = 1;
     gameSpeed = 1;
@@ -171,16 +183,16 @@ export default class Game {
         return acc;
     }, {}));
     currency = {
-        people: 0,
-        ideas1: 0,
-        ideas2: 0,
-        ideas3: 0,
-        growth: 0,
-        health: 0,
-        military: 0,
-        influence: 0,
-        work: 0,
-        exploration: 0
+        [CurrencyKind.People]: 0,
+        [CurrencyKind.Ideas1]: 0,
+        [CurrencyKind.Ideas2]: 0,
+        [CurrencyKind.Ideas3]: 0,
+        [CurrencyKind.Growth]: 0,
+        [CurrencyKind.Health]: 0,
+        [CurrencyKind.Military]: 0,
+        [CurrencyKind.Influence]: 0,
+        [CurrencyKind.Work]: 0,
+        [CurrencyKind.Exploration]: 0
     };
     #autoSaveEnabled = false;
     get openPage() {
@@ -193,7 +205,9 @@ export default class Game {
         this.saveVersion = data.saveVersion ?? this.saveVersion;
         this.gameSpeed = data.gameSpeed ?? this.gameSpeed;
         this.openPageId = data.openPageId ?? this.openPageId;
-        this.upgradePages = data.upgradePages ?? this.upgradePages;
+        if (data.upgradePages) {
+            this.upgradePages = this.upgradePages.map((page, pageId) => Object.fromEntries(Object.entries(page).map(([k, v]) => [k, { ...v, level: data.upgradePages?.[pageId]?.[k]?.level ?? v.level }])));
+        }
         this.currency = data.currency ?? this.currency;
         return this;
     }

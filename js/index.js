@@ -1,4 +1,4 @@
-import Game from "./game.js";
+import Game, { CurrencyIconClass } from "./game.js";
 import { centerActiveButton, romanize } from "./utils.js";
 const upgradeContainer = document.querySelector('#upgrades-container'), upgradesGroupList = document.querySelector('#upgrades-group-buttons'), activeElementParents = [...new Set(document.querySelectorAll(':has(>.active)'))];
 let upgradesGroupListScrollBack;
@@ -44,6 +44,18 @@ upgradesGroupList.addEventListener('click', event => {
         element.querySelector('.up-level').textContent = data.level.toLocaleString();
         element.querySelector('.up-name').textContent = name;
         element.setAttribute('type', data.type.toString());
+        const improvementsContainer = element.querySelector('.up-improvements-container'), originalImprovementElement = improvementsContainer.querySelector('.up-imp');
+        improvementsContainer.replaceChildren(...data.rewards.map(reward => {
+            const improvementElement = originalImprovementElement.cloneNode(true);
+            improvementElement.querySelector('p > .sign').textContent = reward.amount > 0 ? '+' : '-';
+            improvementElement.querySelector('p > .value').textContent = reward.amount.toLocaleString();
+            improvementElement.querySelector('p > .unit').textContent = reward.type == 'percentage' ? '%' : '';
+            const iconElement = improvementElement.querySelector('.up-imp-icon');
+            for (const iconClass of Object.values(CurrencyIconClass))
+                iconElement.classList.remove(...iconClass.split(' '));
+            iconElement.classList.add(...CurrencyIconClass[reward.kind].split(' '));
+            return improvementElement;
+        }));
         element.classList.remove('hidden');
     }
     for (let i = items.length; i < upgradeContainer.children.length; i++)
