@@ -54,6 +54,7 @@ button {
 
 .with-hoverstyle:is(:hover, :focus) {
   background-color: var(--background-color-selected) !important;
+  cursor: pointer;
 }
 
 ul {
@@ -187,7 +188,6 @@ main {
       background-color: var(--background-color-tertiary);
       font-size: 1.3rem;
       height: 4rem;
-      cursor: pointer;
 
       &[type='1'] {
         --upgrade-color: var(--color-idea1);
