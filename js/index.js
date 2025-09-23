@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     globalThis.game = new Game().loadFromLocalStorage().registerAutoSave();
     for (let i = 0; i < 4; i++)
         upgradeContainer.append(upgradeContainer.firstElementChild.cloneNode(true));
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < game.upgradePages.length; i++) {
         let element;
         if (i) {
             element = document.createElement('li');
