@@ -1,0 +1,1 @@
+export default!0;document.querySelector("header > #menu-btn").addEventListener("click",e=>{document.querySelector("header > menu").classList.remove("hidden")});
