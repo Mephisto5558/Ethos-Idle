@@ -148,19 +148,27 @@ header {
     padding: .5rem;
   }
 
-  & > :last-child {
+  & > #menu-btn {
     margin-left: auto;
     text-align-last: right;
+    background-color: transparent;
+    width: 33%;
+    border-radius: 0;
+  }
+
+  & > menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: red;
+    /* margin: 0; */
+    z-index: 10000
   }
 
   & > p > #game-speed-num {
     font-weight: bold;
-  }
-
-  & > button {
-    background-color: transparent;
-    width: 33%;
-    border-radius: 0;
   }
 }
 

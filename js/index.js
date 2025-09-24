@@ -1,4 +1,5 @@
 import Game, { CurrencyIconClass } from "./game.js";
+import __ from "./mainMenu.js";
 import { centerActiveButton, romanize } from "./utils.js";
 const upgradeContainer = document.querySelector('#upgrades-container'), upgradesGroupList = document.querySelector('#upgrades-group-buttons'), activeElementParents = [...new Set(document.querySelectorAll(':has(>.active)'))];
 let upgradesGroupListScrollBack;

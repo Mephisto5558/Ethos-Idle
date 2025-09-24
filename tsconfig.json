@@ -20,7 +20,8 @@
     "esModuleInterop": true,
     "noEmit": false,
     "allowJs": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true
   },
   "exclude": [
     "node_modules"

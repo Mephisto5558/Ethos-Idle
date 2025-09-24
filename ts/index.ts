@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-magic-numbers, @typescript-eslint/no-non-null-assertion */
 
 import Game, { CurrencyIconClass } from './game.ts';
+import __ from './mainMenu.ts';
 import { centerActiveButton, romanize } from './utils.ts';
 
 declare global {
