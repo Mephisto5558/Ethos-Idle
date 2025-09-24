@@ -18,7 +18,7 @@
   "author": "Mephisto5558",
   "license": "MIT",
   "devDependencies": {
-    "@mephisto5558/eslint-config": "file:../libs/eslint-config",
+    "@mephisto5558/eslint-config": "latest",
     "better-typescript-lib": "latest"
   },
   "repository": {
