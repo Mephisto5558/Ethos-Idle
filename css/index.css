@@ -14,6 +14,7 @@
   --color-influence: #fec4fa;
   --color-work: #fbbf8b;
   --color-exploration: #f7f7bc;
+  --color-atom: #b5a3f9;
 
   background-color: var(--background-color);
   color: var(--foreground-color);
@@ -46,6 +47,10 @@
   display: none !important;
 }
 
+.hide-children > *:not(:is(.child-no-hide)) {
+  display: none !important;
+}
+
 button {
   border: none;
   cursor: pointer;
@@ -69,7 +74,7 @@ span {
   word-wrap: break-word;
 }
 
-div:has(>i.fa-solid) {
+*:has(>i.fa-solid) {
 
   & > .fa-users,
   &.g-info:has(>.fa-users) > p {
@@ -120,6 +125,10 @@ div:has(>i.fa-solid) {
   &.g-info:has(>.fa-lightbulb.kind3) > p {
     color: var(--color-idea3)
   }
+
+  & > .fa-atom {
+    color: var(--color-atom);
+  }
 }
 
 .active {
@@ -132,14 +141,20 @@ div:has(>i.fa-solid) {
 }
 
 body {
-  margin: 0;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  margin: 0;
+  height: 100dvh;
+
+  & > :not(:is(header, footer, script)) {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
 }
 
 header {
-  background-color: var(--background-color);
+  background-color: var(--background-color-secondary);
   color: var(--foreground-color-secondary);
   display: flex;
 
@@ -156,27 +171,90 @@ header {
     border-radius: 0;
   }
 
-  & > menu {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: red;
-    /* margin: 0; */
-    z-index: 10000
-  }
-
   & > p > #game-speed-num {
     font-weight: bold;
   }
 }
 
-main {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
+#main-menu {
+  margin: 0;
+  gap: 1px;
+  padding: 0;
+  text-align: center;
 
+  &:not(.hidden) ~ * {
+    display: none;
+  }
+
+  & > h1 {
+    height: 2.25rem;
+  }
+
+  & > button {
+    background-color: var(--background-color-tertiary);
+    height: 3rem;
+
+    &:last-child {
+      margin-top: auto;
+    }
+  }
+
+  & > div {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 1.5rem;
+
+    &:not(.child-no-hide) {
+      display: none;
+    }
+
+    & > h1 {
+      font-size: 125%;
+      margin-bottom: 1.5rem;
+    }
+
+    & > button {
+      background-color: var(--background-color-tertiary);
+      width: 100%;
+      height: 2.5rem;
+    }
+  }
+
+  & #run-summary {
+    & > #stats {
+      font-size: 75%;
+    }
+
+    & > #bonuses-container {
+      background-color: var(--background-color-secondary);
+
+      &:has(>p:empty) {
+        display: none;
+      }
+
+      & > #title {
+        background-color: var(--background-color-tertiary);
+        padding: .5rem 1rem;
+        margin-top: 0;
+        margin-bottom: .5rem;
+        text-align: left;
+        border-bottom: 1px solid var(--background-color);
+        font-size: 80%;
+      }
+
+      & p:not(#title) {
+        /* TODO */
+      }
+
+      & #dark-matter-amt {
+        color: var(--color-atom);
+      }
+    }
+  }
+}
+
+main {
   & > #upgrades-container {
     width: 100%;
     display: grid;

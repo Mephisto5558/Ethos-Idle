@@ -20,10 +20,38 @@
   <header>
     <p><span id='game-speed-num'>1</span>x</p>
     <button id='menu-btn' class='with-hoverstyle'>Menu</button>
-    <menu class='hidden'>
-
-    </menu>
   </header>
+  <menu id='main-menu' class='hidden'>
+    <h1>Main Menu</h1>
+    <button id='run-summary-btn' class='with-hoverstyle'>Run Summary</button>
+    <div id='run-summary'>
+      <h1>Run Summary</h1>
+      <ul id='stats'>
+        <li>Run time: <span id='run-time'>4d</span></li>
+      </ul>
+
+      <button id='abandon-btn' class='with-hoverstyle'>Abandon run</button>
+      <div id='bonuses-container'>
+        <p id='title'>Bonuses</p>
+        <p>With <span id='challenge-amt'>no</span> challenges active, <span id='dark-matter-amt'>4</span><i
+            class='fa-solid fa-atom'></i> gives starting bonuses:</p>
+        <p></p>
+      </div>
+    </div>
+    <button id='stats-btn' class='with-hoverstyle'>Stats</button>
+    <div id='stats'></div>
+    <button id='settings-btn' class='with-hoverstyle'>Settings</button>
+    <div id='settings'></div>
+    <button id='help-btn' class='with-hoverstyle'>Help</button>
+    <div id='help'></div>
+    <button id='store-btn' class='with-hoverstyle'>Store</button>
+    <div id='store'></div>
+    <button id='changelog-btn' class='with-hoverstyle'>Changelog</button>
+    <div id='changelog'></div>
+    <button id='about-btn' class='with-hoverstyle'>About</button>
+    <div id='about'></div>
+    <button id='menu-back-btn' class='with-hoverstyle child-no-hide'>Back</button>
+  </menu>
   <main>
     <div id='upgrades-container'>
       <div class='upgrade with-hoverstyle hidden'>
