@@ -8,6 +8,7 @@
       "DOM.Iterable"
     ],
     "outDir": "js/",
+    "rootDir": "ts/",
     "removeComments": true,
     "rewriteRelativeImportExtensions": true,
     "libReplacement": true,
