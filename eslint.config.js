@@ -1,12 +1,12 @@
-import config, { globals, plugins } from '@mephisto5558/eslint-config';
+import config, { globals } from '@mephisto5558/eslint-config';
 
 /**
- * @type {import('eslint').Linter.FlatConfig[]}
+ * @type {typeof config}
  * This config lists all rules from every plugin it uses. */
 export default [
   ...config,
   {
-    ignores: ['js/**', 'min/**']
+    ignores: ['min/**']
   },
   {
     name: 'overwrite',
@@ -16,10 +16,6 @@ export default [
         ...globals.es2024,
         ...globals.browser
       }
-    },
-    rules: {
-      'import-x/extensions': 'off' // the browser requires them
-    },
-    plugins
+    }
   }
 ];

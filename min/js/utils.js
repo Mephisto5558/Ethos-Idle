@@ -1,1 +1,2 @@
-let romanToArabic=[["M",1e3],["CM",900],["D",500],["CD",400],["C",100],["XC",90],["L",50],["XL",40],["X",10],["IX",9],["V",5],["IV",4],["I",1]];function romanize(e){let o="";for(var[n,r]of romanToArabic)for(;e>=r;)o+=n,e-=r;return o}function centerActiveButton(e){e?.scrollIntoView({behavior:"smooth",inline:"center",block:"nearest"})}export{romanize,centerActiveButton};
+"use strict";(()=>{var t=[["M",1e3],["CM",900],["D",500],["CD",400],["C",100],["XC",90],["L",50],["XL",40],["X",10],["IX",9],["V",5],["IV",4],["I",1]];function i(e){let n="";for(let[r,o]of t)for(;e>=o;)n+=r,e-=o;return n}function c(e){e?.scrollIntoView({behavior:"smooth",inline:"center",block:"nearest"})}})();
+//# sourceMappingURL=utils.js.map

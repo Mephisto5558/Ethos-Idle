@@ -1,30 +1,26 @@
 {
+  "exclude": [
+    "node_modules"
+  ],
   "compilerOptions": {
     "module": "esnext",
+    "moduleResolution": "bundler",
     "target": "esnext",
     "lib": [
-      "ESNext",
       "DOM",
-      "DOM.Iterable"
+      "DOM.Iterable",
+      "ESNext"
     ],
-    "outDir": "js/",
-    "rootDir": "ts/",
-    "removeComments": true,
-    "rewriteRelativeImportExtensions": true,
-    "libReplacement": true,
-    "sourceMap": true,
+    "allowJs": false,
     "exactOptionalPropertyTypes": true,
+    "libReplacement": true,
+    "noEmit": true,
     "noImplicitOverride": true,
     "noUncheckedIndexedAccess": true,
     "noUncheckedSideEffectImports": true,
-    "strict": true,
-    "esModuleInterop": true,
-    "noEmit": false,
-    "allowJs": false,
+    "removeComments": true,
+    "rewriteRelativeImportExtensions": true,
     "skipLibCheck": true,
-    "verbatimModuleSyntax": true
-  },
-  "exclude": [
-    "node_modules"
-  ]
+    "strict": true,
+  }
 }
