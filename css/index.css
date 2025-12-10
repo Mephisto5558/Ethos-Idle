@@ -238,7 +238,7 @@ header {
         padding: .5rem 1rem;
         margin-block-start: 0;
         margin-block-end: .5rem;
-        text-align: left;
+        text-align: start;
         border-block-end: 1px solid var(--background-color);
         font-size: 80%;
       }
@@ -330,7 +330,7 @@ main {
     margin-block-end: 1px;
     padding: 0 50%;
     column-gap: 1px;
-    overflow-x: auto;
+    overflow-inline: auto;
     scroll-snap-type: x mandatory;
     font-size: 75%;
     align-items: flex-end;
@@ -338,11 +338,14 @@ main {
 
     scrollbar-width: none;
     -ms-overflow-style: none;
-    -webkit-scrollbar: none;
 
     -webkit-mask-image: linear-gradient(to right, transparent, var(--background-color) .5rem, var(--background-color) calc(100% - .5rem), transparent);
     mask-image: linear-gradient(to right, transparent, var(--background-color) .5rem, var(--background-color) calc(100% - .5rem), transparent);
-
+    
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    
     & > li {
       scroll-snap-align: center;
       background-color: var(--background-color-secondary);
