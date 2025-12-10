@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
+import { exactNow, sleep } from './utils';
+
 enum IdeaType {
   Red = 1,
   Blue = 2,
@@ -19,6 +21,11 @@ export enum CurrencyKind {
   Exploration = 'exploration'
 }
 
+export enum RewardType {
+  fixed = 1,
+  percentage = 2
+}
+
 export const CurrencyIconClass: Record<CurrencyKind, `fa-${string}`> = {
   [CurrencyKind.People]: 'fa-users',
   [CurrencyKind.Ideas1]: 'fa-lightbulb kind1',
@@ -36,14 +43,71 @@ type GameData = {
   saveVersion: number;
   gameSpeed: number;
   openPageId: number;
-  upgradePages: Record<string, {
-    position: number;
-    level: number;
-    type: IdeaType;
-    rewards: { kind: CurrencyKind; type: 'fixed' | 'percentage'; amount: number }[];
-  }>[];
+  upgradePages: Record<Upgrade['name'], Upgrade>[];
   currency: Record<CurrencyKind, number>;
 };
+
+type Reward = {
+  kind: CurrencyKind;
+  type: RewardType;
+  amount: number;
+};
+
+export class Upgrade {
+  name: string;
+  position: number;
+  #level: number;
+  type: IdeaType;
+  rewards: Reward[];
+
+  /** timestamp in UNIX ms */
+  cooldownEndsAt = 0;
+
+  constructor({ name, position, level = 0, type, rewards, cooldownEndsAt = 0 }: Pick<Upgrade, 'name' | 'position' | 'type' | 'rewards'> & Partial<Pick<Upgrade, 'level' | 'cooldownEndsAt'>>) {
+    this.name = name;
+    this.position = position;
+    this.#level = level;
+    this.type = type;
+    this.rewards = rewards;
+    this.cooldownEndsAt = cooldownEndsAt;
+  }
+
+  get level(): number {
+    return this.#level;
+  }
+
+  /** cooldown in milliseconds */
+  get cooldown(): number {
+    const cooldownS = Math.max(1, this.level) / Math.max(1, game.currency[`ideas${this.type}`]);
+    return cooldownS * 1000;
+  }
+
+  get remainingCooldown(): number {
+    return Math.max(0, this.cooldownEndsAt - exactNow());
+  }
+
+  get onCooldown(): boolean {
+    return this.remainingCooldown > 0;
+  }
+
+  completeUpgrade(amt = 1): void {
+    this.#level += amt;
+    for (const reward of this.rewards)
+      game.currency[reward.kind] += reward.amount;
+  }
+
+  async upgrade(amt = 1) {
+    if (amt && this.onCooldown) return;
+
+    if (!this.onCooldown) this.cooldownEndsAt = exactNow() + this.cooldown;
+    await sleep(this.remainingCooldown);
+    this.completeUpgrade(amt);
+  }
+
+  toJSON() {
+    return { ...this, level: this.level, cooldownEndsAt: this.cooldownEndsAt };
+  }
+}
 
 export default class Game implements GameData {
   saveVersion = 1;
@@ -52,153 +116,150 @@ export default class Game implements GameData {
   upgradePages: GameData['upgradePages'] = [
     /* eslint-disable @typescript-eslint/no-magic-numbers */
     [ // Page 1
-      { name: 'Fire', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Exploration, type: 'fixed', amount: 2 }] },
-      { name: 'Gathering', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Growth, type: 'fixed', amount: 2 }] },
+      { name: 'Fire', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Exploration, type: RewardType.fixed, amount: 2 }] },
+      { name: 'Gathering', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Growth, type: RewardType.fixed, amount: 2 }] },
       { name: 'Hunting', type: IdeaType.Green, rewards: [
-        { kind: CurrencyKind.Growth, type: 'fixed', amount: 2 },
-        { kind: CurrencyKind.Exploration, type: 'fixed', amount: 1 }
+        { kind: CurrencyKind.Growth, type: RewardType.fixed, amount: 2 },
+        { kind: CurrencyKind.Exploration, type: RewardType.fixed, amount: 1 }
       ] },
-      { name: 'Tool Use', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Work, type: 'fixed', amount: 3 }] }
+      { name: 'Tool Use', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Work, type: RewardType.fixed, amount: 3 }] }
     ],
     [ // Page 2
-      { name: 'Art', type: IdeaType.Red, rewards: [{ kind: CurrencyKind.Influence, type: 'fixed', amount: 4 }] },
-      { name: 'Cooking', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Health, type: 'fixed', amount: 1 }] },
+      { name: 'Art', type: IdeaType.Red, rewards: [{ kind: CurrencyKind.Influence, type: RewardType.fixed, amount: 4 }] },
+      { name: 'Cooking', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Health, type: RewardType.fixed, amount: 1 }] },
       { name: 'Language', type: IdeaType.Red, rewards: [
-        { kind: CurrencyKind.Ideas1, type: 'percentage', amount: 5 },
-        { kind: CurrencyKind.Ideas2, type: 'percentage', amount: 5 },
-        { kind: CurrencyKind.Ideas3, type: 'percentage', amount: 5 }
+        { kind: CurrencyKind.Ideas1, type: RewardType.percentage, amount: 5 },
+        { kind: CurrencyKind.Ideas2, type: RewardType.percentage, amount: 5 },
+        { kind: CurrencyKind.Ideas3, type: RewardType.percentage, amount: 5 }
       ] },
-      { name: 'Shelter', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Exploration, type: 'fixed', amount: 2 }] },
-      { name: 'Spears', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Military, type: 'fixed', amount: 3 }] }
+      { name: 'Shelter', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Exploration, type: RewardType.fixed, amount: 2 }] },
+      { name: 'Spears', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Military, type: RewardType.fixed, amount: 3 }] }
     ],
     [ // Page 3
-      { name: 'Burial', type: IdeaType.Red, rewards: [{ kind: CurrencyKind.Influence, type: 'fixed', amount: 3 }] },
-      { name: 'Clothing', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Exploration, type: 'fixed', amount: 3 }] },
+      { name: 'Burial', type: IdeaType.Red, rewards: [{ kind: CurrencyKind.Influence, type: RewardType.fixed, amount: 3 }] },
+      { name: 'Clothing', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Exploration, type: RewardType.fixed, amount: 3 }] },
       { name: 'Herbalism', type: IdeaType.Blue, rewards: [
-        { kind: CurrencyKind.Growth, type: 'fixed', amount: 1 },
-        { kind: CurrencyKind.Health, type: 'fixed', amount: 1 }
+        { kind: CurrencyKind.Growth, type: RewardType.fixed, amount: 1 },
+        { kind: CurrencyKind.Health, type: RewardType.fixed, amount: 1 }
       ] },
       { name: 'Shamanism', type: IdeaType.Red, rewards: [
-        { kind: CurrencyKind.Ideas1, type: 'percentage', amount: 5 },
-        { kind: CurrencyKind.Growth, type: 'fixed', amount: 3 }
+        { kind: CurrencyKind.Ideas1, type: RewardType.percentage, amount: 5 },
+        { kind: CurrencyKind.Growth, type: RewardType.fixed, amount: 3 }
       ] }
     ],
     [ // Page 4
-      { name: 'Archery', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Military, type: 'fixed', amount: 5 }] },
+      { name: 'Archery', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Military, type: RewardType.fixed, amount: 5 }] },
       { name: 'Cave Painting', type: IdeaType.Red, rewards: [
-        { kind: CurrencyKind.Ideas3, type: 'percentage', amount: 5 },
-        { kind: CurrencyKind.Exploration, type: 'fixed', amount: 1 }
+        { kind: CurrencyKind.Ideas3, type: RewardType.percentage, amount: 5 },
+        { kind: CurrencyKind.Exploration, type: RewardType.fixed, amount: 1 }
       ] },
-      { name: 'Fishing', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Growth, type: 'fixed', amount: 2 }] },
-      { name: 'Music', type: IdeaType.Red, rewards: [{ kind: CurrencyKind.Influence, type: 'fixed', amount: 2 }] },
-      { name: 'Textiles', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Work, type: 'fixed', amount: 3 }] }
+      { name: 'Fishing', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Growth, type: RewardType.fixed, amount: 2 }] },
+      { name: 'Music', type: IdeaType.Red, rewards: [{ kind: CurrencyKind.Influence, type: RewardType.fixed, amount: 2 }] },
+      { name: 'Textiles', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Work, type: RewardType.fixed, amount: 3 }] }
     ],
     [ // Page 5
-      { name: 'Domestication', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Growth, type: 'fixed', amount: 5 }] },
+      { name: 'Domestication', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Growth, type: RewardType.fixed, amount: 5 }] },
       { name: 'Pottery', type: IdeaType.Blue, rewards: [
-        { kind: CurrencyKind.Work, type: 'fixed', amount: 3 },
-        { kind: CurrencyKind.Influence, type: 'fixed', amount: 2 }
+        { kind: CurrencyKind.Work, type: RewardType.fixed, amount: 3 },
+        { kind: CurrencyKind.Influence, type: RewardType.fixed, amount: 2 }
       ] },
       { name: 'Sedentism', type: IdeaType.Green, rewards: [
-        { kind: CurrencyKind.Work, type: 'fixed', amount: 2 },
-        { kind: CurrencyKind.Health, type: 'fixed', amount: 3 }
+        { kind: CurrencyKind.Work, type: RewardType.fixed, amount: 2 },
+        { kind: CurrencyKind.Health, type: RewardType.fixed, amount: 3 }
       ] },
-      { name: 'Warfare', type: IdeaType.Red, rewards: [{ kind: CurrencyKind.Military, type: 'fixed', amount: 3 }] }
+      { name: 'Warfare', type: IdeaType.Red, rewards: [{ kind: CurrencyKind.Military, type: RewardType.fixed, amount: 3 }] }
     ],
     [ // Page 6
       { name: 'Agriculture', type: IdeaType.Green, rewards: [
-        { kind: CurrencyKind.Growth, type: 'fixed', amount: 4 },
-        { kind: CurrencyKind.Health, type: 'fixed', amount: 3 }
+        { kind: CurrencyKind.Growth, type: RewardType.fixed, amount: 4 },
+        { kind: CurrencyKind.Health, type: RewardType.fixed, amount: 3 }
       ] },
       { name: 'Artisans', type: IdeaType.Red, rewards: [
-        { kind: CurrencyKind.Military, type: 'fixed', amount: 1 },
-        { kind: CurrencyKind.Work, type: 'fixed', amount: 3 },
-        { kind: CurrencyKind.Influence, type: 'fixed', amount: 3 }
+        { kind: CurrencyKind.Military, type: RewardType.fixed, amount: 1 },
+        { kind: CurrencyKind.Work, type: RewardType.fixed, amount: 3 },
+        { kind: CurrencyKind.Influence, type: RewardType.fixed, amount: 3 }
       ] },
       { name: 'Canoe', type: IdeaType.Green, rewards: [
-        { kind: CurrencyKind.Exploration, type: 'fixed', amount: 3 },
-        { kind: CurrencyKind.Military, type: 'fixed', amount: 1 }
+        { kind: CurrencyKind.Exploration, type: RewardType.fixed, amount: 3 },
+        { kind: CurrencyKind.Military, type: RewardType.fixed, amount: 1 }
       ] },
-      { name: 'Symbology', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Ideas2, type: 'percentage', amount: 5 }] }
+      { name: 'Symbology', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Ideas2, type: RewardType.percentage, amount: 5 }] }
     ],
     [ // Page 7
-      { name: 'Brewing', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Health, type: 'fixed', amount: 4 }] },
-      { name: 'Expeditions', type: IdeaType.Red, rewards: [{ kind: CurrencyKind.Exploration, type: 'fixed', amount: 4 }] },
+      { name: 'Brewing', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Health, type: RewardType.fixed, amount: 4 }] },
+      { name: 'Expeditions', type: IdeaType.Red, rewards: [{ kind: CurrencyKind.Exploration, type: RewardType.fixed, amount: 4 }] },
       { name: 'Irrigation', type: IdeaType.Blue, rewards: [
-        { kind: CurrencyKind.Growth, type: 'fixed', amount: 4 },
-        { kind: CurrencyKind.Work, type: 'fixed', amount: 2 }
+        { kind: CurrencyKind.Growth, type: RewardType.fixed, amount: 4 },
+        { kind: CurrencyKind.Work, type: RewardType.fixed, amount: 2 }
       ] },
-      { name: 'Megaliths', type: IdeaType.Red, rewards: [{ kind: CurrencyKind.Influence, type: 'fixed', amount: 4 }] },
-      { name: 'Weaving', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Work, type: 'fixed', amount: 4 }] }
+      { name: 'Megaliths', type: IdeaType.Red, rewards: [{ kind: CurrencyKind.Influence, type: RewardType.fixed, amount: 4 }] },
+      { name: 'Weaving', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Work, type: RewardType.fixed, amount: 4 }] }
     ],
     [ // Page 8
       { name: 'Architecture', type: IdeaType.Red, rewards: [
-        { kind: CurrencyKind.Health, type: 'fixed', amount: 5 },
-        { kind: CurrencyKind.Influence, type: 'fixed', amount: 5 }
+        { kind: CurrencyKind.Health, type: RewardType.fixed, amount: 5 },
+        { kind: CurrencyKind.Influence, type: RewardType.fixed, amount: 5 }
       ] },
-      { name: 'Sailing', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Exploration, type: 'fixed', amount: 5 }] },
+      { name: 'Sailing', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Exploration, type: RewardType.fixed, amount: 5 }] },
       { name: 'Smelting', type: IdeaType.Green, rewards: [
-        { kind: CurrencyKind.Military, type: 'fixed', amount: 8 },
-        { kind: CurrencyKind.Work, type: 'fixed', amount: 4 }
+        { kind: CurrencyKind.Military, type: RewardType.fixed, amount: 8 },
+        { kind: CurrencyKind.Work, type: RewardType.fixed, amount: 4 }
       ] },
-      { name: 'Wheel', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Work, type: 'fixed', amount: 6 }] }
+      { name: 'Wheel', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Work, type: RewardType.fixed, amount: 6 }] }
     ],
     [ // Page 9
       { name: 'Bronze Working', type: IdeaType.Green, rewards: [
-        { kind: CurrencyKind.Military, type: 'fixed', amount: 4 },
-        { kind: CurrencyKind.Work, type: 'fixed', amount: 8 }
+        { kind: CurrencyKind.Military, type: RewardType.fixed, amount: 4 },
+        { kind: CurrencyKind.Work, type: RewardType.fixed, amount: 8 }
       ] },
       { name: 'Government', type: IdeaType.Red, rewards: [
-        { kind: CurrencyKind.Exploration, type: 'fixed', amount: 2 },
-        { kind: CurrencyKind.Health, type: 'fixed', amount: 6 }
+        { kind: CurrencyKind.Exploration, type: RewardType.fixed, amount: 2 },
+        { kind: CurrencyKind.Health, type: RewardType.fixed, amount: 6 }
       ] },
       { name: 'Horseback Riding', type: IdeaType.Green, rewards: [
-        { kind: CurrencyKind.Exploration, type: 'fixed', amount: 4 },
-        { kind: CurrencyKind.Military, type: 'fixed', amount: 3 }
+        { kind: CurrencyKind.Exploration, type: RewardType.fixed, amount: 4 },
+        { kind: CurrencyKind.Military, type: RewardType.fixed, amount: 3 }
       ] },
-      { name: 'Plough', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Growth, type: 'fixed', amount: 12 }] },
+      { name: 'Plough', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Growth, type: RewardType.fixed, amount: 12 }] },
       { name: 'Writing', type: IdeaType.Blue, rewards: [
-        { kind: CurrencyKind.Ideas1, type: 'percentage', amount: 5 },
-        { kind: CurrencyKind.Ideas2, type: 'percentage', amount: 5 },
-        { kind: CurrencyKind.Ideas3, type: 'percentage', amount: 5 }
+        { kind: CurrencyKind.Ideas1, type: RewardType.percentage, amount: 5 },
+        { kind: CurrencyKind.Ideas2, type: RewardType.percentage, amount: 5 },
+        { kind: CurrencyKind.Ideas3, type: RewardType.percentage, amount: 5 }
       ] }
     ],
     [ // Page 10
-      { name: 'Mathematics', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Ideas2, type: 'percentage', amount: 5 }] },
-      { name: 'Monarchism', type: IdeaType.Red, rewards: [{ kind: CurrencyKind.Influence, type: 'fixed', amount: 12 }] },
+      { name: 'Mathematics', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Ideas2, type: RewardType.percentage, amount: 5 }] },
+      { name: 'Monarchism', type: IdeaType.Red, rewards: [{ kind: CurrencyKind.Influence, type: RewardType.fixed, amount: 12 }] },
       { name: 'Money', type: IdeaType.Green, rewards: [
-        { kind: CurrencyKind.Work, type: 'fixed', amount: 8 },
-        { kind: CurrencyKind.Influence, type: 'fixed', amount: 4 }
+        { kind: CurrencyKind.Work, type: RewardType.fixed, amount: 8 },
+        { kind: CurrencyKind.Influence, type: RewardType.fixed, amount: 4 }
       ] },
       { name: 'Shipbuilding', type: IdeaType.Blue, rewards: [
-        { kind: CurrencyKind.Exploration, type: 'fixed', amount: 6 },
-        { kind: CurrencyKind.Military, type: 'fixed', amount: 2 }
+        { kind: CurrencyKind.Exploration, type: RewardType.fixed, amount: 6 },
+        { kind: CurrencyKind.Military, type: RewardType.fixed, amount: 2 }
       ] },
-      { name: 'Swords', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Military, type: 'fixed', amount: 6 }] }
+      { name: 'Swords', type: IdeaType.Blue, rewards: [{ kind: CurrencyKind.Military, type: RewardType.fixed, amount: 6 }] }
     ],
     [ // Page 11
       { name: 'Calendar', type: IdeaType.Blue, rewards: [
-        { kind: CurrencyKind.Growth, type: 'fixed', amount: 16 },
-        { kind: CurrencyKind.Work, type: 'fixed', amount: 4 }
+        { kind: CurrencyKind.Growth, type: RewardType.fixed, amount: 16 },
+        { kind: CurrencyKind.Work, type: RewardType.fixed, amount: 4 }
       ] },
       { name: 'Law', type: IdeaType.Red, rewards: [
-        { kind: CurrencyKind.Military, type: 'fixed', amount: 6 },
-        { kind: CurrencyKind.Health, type: 'fixed', amount: 6 }
+        { kind: CurrencyKind.Military, type: RewardType.fixed, amount: 6 },
+        { kind: CurrencyKind.Health, type: RewardType.fixed, amount: 6 }
       ] },
       { name: 'Libraries', type: IdeaType.Green, rewards: [
-        { kind: CurrencyKind.Ideas3, type: 'percentage', amount: 5 },
-        { kind: CurrencyKind.Influence, type: 'fixed', amount: 4 }
+        { kind: CurrencyKind.Ideas3, type: RewardType.percentage, amount: 5 },
+        { kind: CurrencyKind.Influence, type: RewardType.fixed, amount: 4 }
       ] },
-      { name: 'Sewers', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Health, type: 'fixed', amount: 10 }] },
+      { name: 'Sewers', type: IdeaType.Green, rewards: [{ kind: CurrencyKind.Health, type: RewardType.fixed, amount: 10 }] },
       { name: 'Sundial', type: IdeaType.Blue, rewards: [
-        { kind: CurrencyKind.Exploration, type: 'fixed', amount: 10 },
-        { kind: CurrencyKind.Work, type: 'fixed', amount: 4 }
+        { kind: CurrencyKind.Exploration, type: RewardType.fixed, amount: 10 },
+        { kind: CurrencyKind.Work, type: RewardType.fixed, amount: 4 }
       ] }
     ]
-  ].map(page => page.reduce<GameData['upgradePages'][number]>((acc, { name, type, rewards }, position) => {
-    acc[name] = { position, level: 1, type, rewards: rewards as (typeof acc)[string]['rewards'] };
-    return acc;
-  }, {}));
+  ].map(page => Object.fromEntries(page.map((e, i) => [e.name, new Upgrade({ position: i, ...e })])));
 
   currency: GameData['currency'] = {
     [CurrencyKind.People]: 0,
@@ -228,11 +289,8 @@ export default class Game implements GameData {
     this.gameSpeed = data.gameSpeed ?? this.gameSpeed;
     this.openPageId = data.openPageId ?? this.openPageId;
 
-    if (data.upgradePages) {
-      this.upgradePages = this.upgradePages.map((page, pageId) => Object.fromEntries(Object.entries(page).map(
-        ([k, v]) => [k, { ...v, level: data.upgradePages?.[pageId]?.[k]?.level ?? v.level }]
-      )));
-    }
+    if (data.upgradePages)
+      this.upgradePages = this.upgradePages.map((page, pageId) => Object.fromEntries(Object.entries(page).map(([k, v]) => [k, new Upgrade({ ...v, ...data.upgradePages?.[pageId]?.[k] })])));
 
     this.currency = data.currency ?? this.currency;
 

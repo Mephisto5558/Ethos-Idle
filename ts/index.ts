@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-magic-numbers, @typescript-eslint/no-non-null-assertion */
 
-import Game, { CurrencyIconClass } from './game.ts';
-import __ from './mainMenu.ts';
-import { centerActiveButton, romanize } from './utils.ts';
+import Game, { CurrencyIconClass, RewardType } from './game';
+import { centerActiveButton, exactNow, romanize, sleep } from './utils';
+import type { CurrencyKind, Upgrade } from './game';
+import './mainMenu';
 
 declare global {
   /* eslint-disable-next-line no-inner-declarations, vars-on-top */
@@ -12,9 +13,53 @@ declare global {
 const
   upgradeContainer = document.querySelector<HTMLDivElement>('#upgrades-container')!,
   upgradesGroupList = document.querySelector<HTMLUListElement>('#upgrades-group-buttons')!,
+  currencyList = Object.fromEntries(
+    [...document.querySelectorAll<HTMLDivElement>('footer > #items > div > div')]
+      .map(e => [e.id as CurrencyKind, Object.fromEntries([...e.querySelector('p')!.children].map(e => [e.classList[0]! as 'value' | 'unit', e as HTMLSpanElement]))])
+  ),
   activeElementParents = [...new Set(document.querySelectorAll(':has(>.active)'))];
 
 let upgradesGroupListScrollBack: number | undefined;
+
+function cleanUpLevelUp(target: Element, progressBar: HTMLDivElement, upgrade: Upgrade) {
+  progressBar.style.removeProperty('transition');
+  progressBar.style.removeProperty('transform');
+
+  target.querySelector('.up-level')!.textContent = upgrade.level.toLocaleString();
+
+  for (const reward of upgrade.rewards)
+    currencyList[reward.kind].value.textContent = game.currency[reward.kind].toLocaleString();
+}
+
+function startAnimation(target: Element, remainingTime: number, startProgress = 0) {
+  const progressBar = target.querySelector<HTMLDivElement>('.up-progressbar')!;
+
+  progressBar.style.transition = 'none';
+  progressBar.style.transform = `scaleX(${startProgress})`;
+
+  // Force reflow
+  void progressBar.offsetWidth;
+
+  progressBar.style.transition = `transform ${remainingTime}ms linear`;
+  progressBar.style.transform = 'scaleX(1)';
+}
+
+async function restoreCooldowns() {
+  for (const element of upgradeContainer.querySelectorAll<HTMLDivElement>('.upgrade:not(.hidden)')) {
+    const upgrade = game.openPage[element.querySelector('.up-name')!.textContent];
+    if (!upgrade?.onCooldown) continue;
+
+    const remainingTime = upgrade.cooldownEndsAt - exactNow(),
+      startProgress = (upgrade.cooldown - remainingTime) / upgrade.cooldown;
+
+    startAnimation(element, remainingTime, startProgress);
+
+    await sleep(upgrade.remainingCooldown);
+
+    upgrade.completeUpgrade();
+    cleanUpLevelUp(element, element.querySelector('.up-progressbar')!, upgrade);
+  }
+}
 
 for (const element of activeElementParents) {
   element.addEventListener('click', event => {
@@ -34,18 +79,19 @@ for (const element of activeElementParents) {
   });
 }
 
-upgradeContainer.addEventListener('click', (event: PointerEvent) => {
+upgradeContainer.addEventListener('click', async (event: PointerEvent) => {
   if (!(event.target instanceof Element)) return;
 
   const target = event.target.closest('.upgrade');
   if (!target) return;
 
-  const
-    upgrade = game.openPage[target.querySelector('.up-name')!.textContent]!,
-    levelElement = target.querySelector('.up-level')!;
+  const upgrade = game.openPage[target.querySelector('.up-name')!.textContent];
+  if (!upgrade || upgrade.onCooldown) return;
 
-  upgrade.level++;
-  levelElement.textContent = upgrade.level.toLocaleString();
+  startAnimation(target, upgrade.cooldown);
+
+  await upgrade.upgrade();
+  cleanUpLevelUp(target, target.querySelector('.up-progressbar')!, upgrade);
 });
 
 upgradesGroupList.addEventListener('wheel', (event: WheelEvent) => {
@@ -70,7 +116,7 @@ upgradesGroupList.addEventListener('click', event => {
   const items = Object.entries(game.openPage);
   for (const [name, data] of items) {
     const element = upgradeContainer.children.item(data.position) as HTMLDivElement;
-    element.querySelector('.up-level')!.textContent = data.level.toLocaleString();
+    element.querySelector('.up-level')!.textContent = data.level ? data.level.toLocaleString() : '';
     element.querySelector('.up-name')!.textContent = name;
     element.setAttribute('type', data.type.toString());
 
@@ -83,7 +129,7 @@ upgradesGroupList.addEventListener('click', event => {
 
       improvementElement.querySelector('p > .sign')!.textContent = reward.amount > 0 ? '+' : '-';
       improvementElement.querySelector('p > .value')!.textContent = reward.amount.toLocaleString();
-      improvementElement.querySelector('p > .unit')!.textContent = reward.type == 'percentage' ? '%' : '';
+      improvementElement.querySelector('p > .unit')!.textContent = reward.type == RewardType.percentage ? '%' : '';
 
       const iconElement = improvementElement.querySelector('.up-imp-icon')!;
       for (const iconClass of Object.values(CurrencyIconClass) as string[])
@@ -122,4 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   centerActiveButton(upgradesGroupList.children[game.openPageId]);
   (upgradesGroupList.children[game.openPageId]!.firstChild as HTMLButtonElement).click(); // hacky for now
+
+  restoreCooldowns();
 });

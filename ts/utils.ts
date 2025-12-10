@@ -21,3 +21,11 @@ export function romanize(num: number): string {
 export function centerActiveButton(element?: Element): void {
   element?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 }
+
+export function exactNow() {
+  return performance.timeOrigin + performance.now();
+}
+
+export async function sleep(sleepMS: number) {
+  return new Promise(r => setTimeout(r, sleepMS));
+}
