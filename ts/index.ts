@@ -166,6 +166,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (i) upgradesGroupList.append(element);
   }
 
+  for (const [currency, currencyElement] of Object.entries(currencyList) as [CurrencyKind, typeof currencyList[CurrencyKind]][])
+    currencyElement.value.textContent = game.currency[currency].toLocaleString();
+
   centerActiveButton(upgradesGroupList.children[game.openPageId]);
   (upgradesGroupList.children[game.openPageId]!.firstChild as HTMLButtonElement).click(); // hacky for now
 
