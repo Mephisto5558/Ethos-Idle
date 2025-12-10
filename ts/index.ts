@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-magic-numbers, @typescript-eslint/no-non-null-assertion */
 
 import Game, { CurrencyIconClass, RewardType } from './game';
+
+/* eslint-disable-next-line import-x/no-unassigned-import */
+import './mainMenu';
+
 import { centerActiveButton, exactNow, romanize, sleep } from './utils';
 import type { CurrencyKind, Upgrade } from './game';
-import './mainMenu';
 
 declare global {
   /* eslint-disable-next-line no-inner-declarations, vars-on-top */
@@ -14,14 +17,15 @@ const
   upgradeContainer = document.querySelector<HTMLDivElement>('#upgrades-container')!,
   upgradesGroupList = document.querySelector<HTMLUListElement>('#upgrades-group-buttons')!,
   currencyList = Object.fromEntries(
-    [...document.querySelectorAll<HTMLDivElement>('footer > #items > div > div')]
-      .map(e => [e.id as CurrencyKind, Object.fromEntries([...e.querySelector('p')!.children].map(e => [e.classList[0]! as 'value' | 'unit', e as HTMLSpanElement]))])
+    [...document.querySelectorAll<HTMLDivElement>('footer > #items > div > div')].map(e => [e.id as CurrencyKind, Object.fromEntries(
+      [...e.querySelector('p')!.children].map(e => [e.classList[0]! as 'value' | 'unit', e as HTMLSpanElement])
+    )])
   ),
   activeElementParents = [...new Set(document.querySelectorAll(':has(>.active)'))];
 
 let upgradesGroupListScrollBack: number | undefined;
 
-function cleanUpLevelUp(target: Element, progressBar: HTMLDivElement, upgrade: Upgrade) {
+function cleanUpLevelUp(target: Element, progressBar: HTMLDivElement, upgrade: Upgrade): void {
   progressBar.style.removeProperty('transition');
   progressBar.style.removeProperty('transform');
 
@@ -31,7 +35,7 @@ function cleanUpLevelUp(target: Element, progressBar: HTMLDivElement, upgrade: U
     currencyList[reward.kind].value.textContent = game.currency[reward.kind].toLocaleString();
 }
 
-function startAnimation(target: Element, remainingTime: number, startProgress = 0) {
+function startAnimation(target: Element, remainingTime: number, startProgress = 0): void {
   const progressBar = target.querySelector<HTMLDivElement>('.up-progressbar')!;
 
   progressBar.style.transition = 'none';
@@ -44,12 +48,13 @@ function startAnimation(target: Element, remainingTime: number, startProgress = 
   progressBar.style.transform = 'scaleX(1)';
 }
 
-async function restoreCooldowns() {
+async function restoreCooldowns(): Promise<void> {
   for (const element of upgradeContainer.querySelectorAll<HTMLDivElement>('.upgrade:not(.hidden)')) {
     const upgrade = game.openPage[element.querySelector('.up-name')!.textContent];
     if (!upgrade?.onCooldown) continue;
 
-    const remainingTime = upgrade.cooldownEndsAt - exactNow(),
+    const
+      remainingTime = upgrade.cooldownEndsAt - exactNow(),
       startProgress = (upgrade.cooldown - remainingTime) / upgrade.cooldown;
 
     startAnimation(element, remainingTime, startProgress);
@@ -80,9 +85,7 @@ for (const element of activeElementParents) {
 }
 
 upgradeContainer.addEventListener('click', async (event: PointerEvent) => {
-  if (!(event.target instanceof Element)) return;
-
-  const target = event.target.closest('.upgrade');
+  const target = (event.target as Element).closest<HTMLDivElement>('.upgrade');
   if (!target) return;
 
   const upgrade = game.openPage[target.querySelector('.up-name')!.textContent];
@@ -147,7 +150,7 @@ upgradesGroupList.addEventListener('click', event => {
     upgradeContainer.children.item(i)?.classList.add('hidden');
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   globalThis.game = new Game().loadFromLocalStorage().registerAutoSave();
 
   for (let i = 0; i < 4; i++)
@@ -172,5 +175,5 @@ document.addEventListener('DOMContentLoaded', () => {
   centerActiveButton(upgradesGroupList.children[game.openPageId]);
   (upgradesGroupList.children[game.openPageId]!.firstChild as HTMLButtonElement).click(); // hacky for now
 
-  restoreCooldowns();
+  await restoreCooldowns();
 });

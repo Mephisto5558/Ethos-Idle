@@ -57,6 +57,7 @@ button {
   background-color: inherit;
 }
 
+/* Note because I always forget: This does not work when using mobile view and the touch thingy is enabled*/
 .with-hoverstyle:is(:hover, :focus) {
   background-color: var(--background-color-selected) !important;
   cursor: pointer;
@@ -276,6 +277,10 @@ main {
 
       &[type='3'] {
         --upgrade-color: var(--color-idea3);
+      }
+
+      &.auto-upgrading {
+        background-color: var(--background-color-selected);
       }
 
       & > .up-level {

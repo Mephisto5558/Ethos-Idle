@@ -63,7 +63,9 @@ export class Upgrade {
   /** timestamp in UNIX ms */
   cooldownEndsAt = 0;
 
-  constructor({ name, position, level = 0, type, rewards, cooldownEndsAt = 0 }: Pick<Upgrade, 'name' | 'position' | 'type' | 'rewards'> & Partial<Pick<Upgrade, 'level' | 'cooldownEndsAt'>>) {
+  constructor({
+    name, position, level = 0, type, rewards, cooldownEndsAt = 0
+  }: Pick<Upgrade, 'name' | 'position' | 'type' | 'rewards'> & Partial<Pick<Upgrade, 'level' | 'cooldownEndsAt'>>) {
     this.name = name;
     this.position = position;
     this.#level = level;
@@ -78,7 +80,7 @@ export class Upgrade {
 
   /** cooldown in milliseconds */
   get cooldown(): number {
-    const cooldownS = Math.max(1, this.level) / Math.max(1, game.currency[`ideas${this.type}`]);
+    const cooldownS = (Math.max(1, this.level) / Math.max(1, game.currency[`ideas${this.type}`])) * this.rewards.length;
     return cooldownS * 1000;
   }
 
@@ -96,7 +98,7 @@ export class Upgrade {
       game.currency[reward.kind] += reward.amount;
   }
 
-  async upgrade(amt = 1) {
+  async upgrade(amt = 1): Promise<void> {
     if (amt && this.onCooldown) return;
 
     if (!this.onCooldown) this.cooldownEndsAt = exactNow() + this.cooldown;
@@ -104,8 +106,9 @@ export class Upgrade {
     this.completeUpgrade(amt);
   }
 
-  toJSON() {
-    return { ...this, level: this.level, cooldownEndsAt: this.cooldownEndsAt };
+  toJSON(): object {
+    /* eslint-disable @typescript-eslint/no-misused-spread -- intentional */
+    return { ...this, level: this.level, cooldownEndsAt: this.cooldownEndsAt } as object;
   }
 }
 
@@ -276,12 +279,15 @@ export default class Game implements GameData {
 
   #autoSaveEnabled = false;
 
+  /** If true, saving is disabled (for deleteSave e.g.) */
+  #noSave = false;
+
   get openPage(): GameData['upgradePages'][number] {
     return this.upgradePages[this.openPageId]!;
   }
 
   save(): void {
-    globalThis.localStorage.setItem('gameSave', btoa(JSON.stringify(this as GameData)));
+    if (!this.#noSave) globalThis.localStorage.setItem('gameSave', btoa(JSON.stringify(this as GameData)));
   }
 
   load(data: Partial<GameData> | undefined = {}): this {
@@ -290,9 +296,16 @@ export default class Game implements GameData {
     this.openPageId = data.openPageId ?? this.openPageId;
 
     if (data.upgradePages)
-      this.upgradePages = this.upgradePages.map((page, pageId) => Object.fromEntries(Object.entries(page).map(([k, v]) => [k, new Upgrade({ ...v, ...data.upgradePages?.[pageId]?.[k] })])));
+      this.upgradePages = this.upgradePages.map((page, pageId) => Object.fromEntries(Object.entries(page)
+        .map(([k, v]) => [k, new Upgrade({ ...v, ...data.upgradePages?.[pageId]?.[k] })])
+      ));
 
     this.currency = data.currency ?? this.currency;
+
+    // Must be at least 1
+    this.currency.ideas1 ||= 1;
+    this.currency.ideas2 ||= 1;
+    this.currency.ideas3 ||= 1;
 
     return this;
   }
@@ -312,16 +325,11 @@ export default class Game implements GameData {
     return this.load(saveData);
   }
 
-  deleteSave(): this {
+  deleteSave(): void {
+    this.#noSave = true;
+
     globalThis.localStorage.removeItem('gameSave');
-
-    const defaultGame = new (this.constructor as typeof Game)();
-    this.saveVersion = defaultGame.saveVersion;
-    this.gameSpeed = defaultGame.gameSpeed;
-    this.openPageId = defaultGame.openPageId;
-    this.upgradePages = defaultGame.upgradePages;
-
-    return this;
+    globalThis.location.reload();
   }
 
   registerAutoSave(): this {

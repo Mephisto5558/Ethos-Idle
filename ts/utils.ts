@@ -22,10 +22,10 @@ export function centerActiveButton(element?: Element): void {
   element?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 }
 
-export function exactNow() {
+export function exactNow(): number {
   return performance.timeOrigin + performance.now();
 }
 
-export async function sleep(sleepMS: number) {
-  return new Promise(r => setTimeout(r, sleepMS));
+export async function sleep(sleepMS: number): Promise<void> {
+  return new Promise(res => void setTimeout(res, sleepMS));
 }
