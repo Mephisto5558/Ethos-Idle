@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-magic-numbers, @typescript-eslint/no-non-null-assertion */
 
+import type * as __ from '@mephisto5558/better-types'; /* eslint-disable-line import-x/order, import-x/no-namespace -- load in global definitions */
+
 import Game, { CurrencyIconClass, RewardType } from './game';
 
 /* eslint-disable-next-line import-x/no-unassigned-import */
@@ -169,7 +171,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (i) upgradesGroupList.append(element);
   }
 
-  for (const [currency, currencyElement] of Object.entries(currencyList) as [CurrencyKind, typeof currencyList[CurrencyKind]][])
+  for (const [currency, currencyElement] of Object.entries(currencyList))
     currencyElement.value.textContent = game.currency[currency].toLocaleString();
 
   centerActiveButton(upgradesGroupList.children[game.openPageId]);
