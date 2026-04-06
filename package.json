@@ -33,7 +33,7 @@
   "devDependencies": {
     "@mephisto5558/better-types": "latest",
     "@mephisto5558/eslint-config": "github:Mephisto5558/ESLint-Config",
-    "esbuild": "^0.27.1",
+    "esbuild": "^0.28.0",
     "npm-run-all2": "8.x",
     "rimraf": "6.x"
   },
