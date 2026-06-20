@@ -34,7 +34,7 @@
     "@mephisto5558/better-types": "latest",
     "@mephisto5558/eslint-config": "github:Mephisto5558/ESLint-Config",
     "esbuild": "0.28.x",
-    "npm-run-all2": "8.x",
+    "npm-run-all2": "9.x",
     "rimraf": "6.x"
   },
   "engines": {
